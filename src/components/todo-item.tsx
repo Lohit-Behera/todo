@@ -41,8 +41,19 @@ export default function TodoItem({
   const dispatch = useDispatch();
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(text);
-  const [editStartTime, setEditStartTime] = useState(startTime);
-  const [editEndTime, setEditEndTime] = useState(endTime);
+
+  // Parse start time
+  const startHour = startTime ? startTime.split(":")[0] : "00";
+  const startMinute = startTime ? startTime.split(":")[1] : "00";
+  const [editStartHour, setEditStartHour] = useState(startHour);
+  const [editStartMinute, setEditStartMinute] = useState(startMinute);
+
+  // Parse end time
+  const endHour = endTime ? endTime.split(":")[0] : "00";
+  const endMinute = endTime ? endTime.split(":")[1] : "00";
+  const [editEndHour, setEditEndHour] = useState(endHour);
+  const [editEndMinute, setEditEndMinute] = useState(endMinute);
+
   const [editPriority, setEditPriority] = useState<Priority>(priority);
 
   const handleToggle = () => {
@@ -60,19 +71,24 @@ export default function TodoItem({
   const handleEdit = () => {
     setIsEditing(true);
     setEditText(text);
-    setEditStartTime(startTime);
-    setEditEndTime(endTime);
+    setEditStartHour(startHour);
+    setEditStartMinute(startMinute);
+    setEditEndHour(endHour);
+    setEditEndMinute(endMinute);
     setEditPriority(priority);
   };
 
   const handleSave = () => {
     if (editText.trim()) {
+      const updatedStartTime = `${editStartHour}:${editStartMinute}`;
+      const updatedEndTime = `${editEndHour}:${editEndMinute}`;
+
       dispatch(
         updateTodo({
           id,
           text: editText,
-          startTime: editStartTime,
-          endTime: editEndTime,
+          startTime: updatedStartTime,
+          endTime: updatedEndTime,
           priority: editPriority,
         })
       );
@@ -84,8 +100,10 @@ export default function TodoItem({
   const handleCancel = () => {
     setIsEditing(false);
     setEditText(text);
-    setEditStartTime(startTime);
-    setEditEndTime(endTime);
+    setEditStartHour(startHour);
+    setEditStartMinute(startMinute);
+    setEditEndHour(endHour);
+    setEditEndMinute(endMinute);
     setEditPriority(priority);
   };
 
@@ -124,23 +142,123 @@ export default function TodoItem({
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="grid w-full items-center gap-1.5">
-                  <Label htmlFor={`edit-start-time-${id}`}>Start Time</Label>
-                  <Input
-                    id={`edit-start-time-${id}`}
-                    type="time"
-                    value={editStartTime}
-                    onChange={(e) => setEditStartTime(e.target.value)}
-                  />
+                <div className="grid gap-4">
+                  <Label>Start Time</Label>
+                  <div className="grid grid-cols-2 gap-2 w-full">
+                    <div className="w-full space-y-2">
+                      <Label htmlFor={`edit-start-hour-${id}`}>Hour</Label>
+                      <Select
+                        value={editStartHour}
+                        onValueChange={(value) => setEditStartHour(value)}
+                      >
+                        <SelectTrigger
+                          id={`edit-start-hour-${id}`}
+                          aria-label="Hour"
+                          className="w-full"
+                        >
+                          <SelectValue placeholder="Hour" />
+                        </SelectTrigger>
+                        <SelectContent className="w-full">
+                          {Array.from({ length: 24 }, (_, i) => i).map(
+                            (hour) => (
+                              <SelectItem
+                                key={`start-hour-${hour}`}
+                                value={hour < 10 ? `0${hour}` : `${hour}`}
+                              >
+                                {hour < 10 ? `0${hour}` : hour}
+                              </SelectItem>
+                            )
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`edit-start-minute-${id}`}>Minute</Label>
+                      <Select
+                        value={editStartMinute}
+                        onValueChange={(value) => setEditStartMinute(value)}
+                      >
+                        <SelectTrigger
+                          id={`edit-start-minute-${id}`}
+                          aria-label="Minute"
+                          className="w-full"
+                        >
+                          <SelectValue placeholder="Minute" />
+                        </SelectTrigger>
+                        <SelectContent className="w-full">
+                          {Array.from({ length: 60 }, (_, i) => i).map(
+                            (minute) => (
+                              <SelectItem
+                                key={`start-minute-${minute}`}
+                                value={minute < 10 ? `0${minute}` : `${minute}`}
+                              >
+                                {minute < 10 ? `0${minute}` : minute}
+                              </SelectItem>
+                            )
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                 </div>
-                <div className="grid w-full items-center gap-1.5">
-                  <Label htmlFor={`edit-end-time-${id}`}>End Time</Label>
-                  <Input
-                    id={`edit-end-time-${id}`}
-                    type="time"
-                    value={editEndTime}
-                    onChange={(e) => setEditEndTime(e.target.value)}
-                  />
+                <div className="grid gap-4">
+                  <Label>End Time</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-2">
+                      <Label htmlFor={`edit-end-hour-${id}`}>Hour</Label>
+                      <Select
+                        value={editEndHour}
+                        onValueChange={(value) => setEditEndHour(value)}
+                      >
+                        <SelectTrigger
+                          id={`edit-end-hour-${id}`}
+                          aria-label="Hour"
+                          className="w-full"
+                        >
+                          <SelectValue placeholder="Hour" />
+                        </SelectTrigger>
+                        <SelectContent className="w-full">
+                          {Array.from({ length: 24 }, (_, i) => i).map(
+                            (hour) => (
+                              <SelectItem
+                                key={`end-hour-${hour}`}
+                                value={hour < 10 ? `0${hour}` : `${hour}`}
+                              >
+                                {hour < 10 ? `0${hour}` : hour}
+                              </SelectItem>
+                            )
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`edit-end-minute-${id}`}>Minute</Label>
+                      <Select
+                        value={editEndMinute}
+                        onValueChange={(value) => setEditEndMinute(value)}
+                      >
+                        <SelectTrigger
+                          id={`edit-end-minute-${id}`}
+                          aria-label="Minute"
+                          className="w-full"
+                        >
+                          <SelectValue placeholder="Minute" />
+                        </SelectTrigger>
+                        <SelectContent className="w-full">
+                          {Array.from({ length: 60 }, (_, i) => i).map(
+                            (minute) => (
+                              <SelectItem
+                                key={`end-minute-${minute}`}
+                                value={minute < 10 ? `0${minute}` : `${minute}`}
+                              >
+                                {minute < 10 ? `0${minute}` : minute}
+                              </SelectItem>
+                            )
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -150,10 +268,13 @@ export default function TodoItem({
                   value={editPriority}
                   onValueChange={(value: Priority) => setEditPriority(value)}
                 >
-                  <SelectTrigger id={`edit-priority-${id}`}>
+                  <SelectTrigger
+                    id={`edit-priority-${id}`}
+                    className="min-w-[180px]"
+                  >
                     <SelectValue placeholder="Select priority" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="min-w-[180px]">
                     <SelectItem value="low">Low</SelectItem>
                     <SelectItem value="medium">Medium</SelectItem>
                     <SelectItem value="high">High</SelectItem>

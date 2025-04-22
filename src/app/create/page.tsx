@@ -78,6 +78,7 @@ export default function CreateTodo() {
                 onChange={(e) => setText(e.target.value)}
                 placeholder="What needs to be done?"
                 required
+                className=""
               />
             </div>
 
@@ -94,7 +95,11 @@ export default function CreateTodo() {
                         setStartTime(`${value}:${minute}`);
                       }}
                     >
-                      <SelectTrigger id="start-hour" aria-label="Hour">
+                      <SelectTrigger
+                        id="start-hour"
+                        aria-label="Hour"
+                        className="w-full"
+                      >
                         <SelectValue placeholder="Hour" />
                       </SelectTrigger>
                       <SelectContent className="w-full">
@@ -118,10 +123,14 @@ export default function CreateTodo() {
                         setStartTime(`${hour}:${value}`);
                       }}
                     >
-                      <SelectTrigger id="start-minute" aria-label="Minute">
+                      <SelectTrigger
+                        id="start-minute"
+                        aria-label="Minute"
+                        className="w-full"
+                      >
                         <SelectValue placeholder="Minute" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="w-full">
                         {Array.from({ length: 60 }, (_, i) => i).map(
                           (minute) => (
                             <SelectItem
@@ -149,10 +158,14 @@ export default function CreateTodo() {
                         setEndTime(`${value}:${minute}`);
                       }}
                     >
-                      <SelectTrigger id="end-hour" aria-label="Hour">
+                      <SelectTrigger
+                        id="end-hour"
+                        aria-label="Hour"
+                        className="w-full"
+                      >
                         <SelectValue placeholder="Hour" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="w-full">
                         {Array.from({ length: 24 }, (_, i) => i).map((hour) => (
                           <SelectItem
                             key={`end-hour-${hour}`}
@@ -173,10 +186,14 @@ export default function CreateTodo() {
                         setEndTime(`${hour}:${value}`);
                       }}
                     >
-                      <SelectTrigger id="end-minute" aria-label="Minute">
+                      <SelectTrigger
+                        id="end-minute"
+                        aria-label="Minute"
+                        className="w-full"
+                      >
                         <SelectValue placeholder="Minute" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="w-full">
                         {Array.from({ length: 60 }, (_, i) => i).map(
                           (minute) => (
                             <SelectItem
@@ -200,10 +217,10 @@ export default function CreateTodo() {
                 value={priority}
                 onValueChange={(value: Priority) => setPriority(value)}
               >
-                <SelectTrigger id="priority">
+                <SelectTrigger id="priority" className="min-w-[180px]">
                   <SelectValue placeholder="Select priority" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="min-w-[180px]">
                   <SelectItem value="low">Low</SelectItem>
                   <SelectItem value="medium">Medium</SelectItem>
                   <SelectItem value="high">High</SelectItem>

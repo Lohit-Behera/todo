@@ -10,14 +10,8 @@ import { flushSync } from "react-dom";
 export function ModeToggle() {
   const { theme, setTheme, resolvedTheme } = useTheme();
 
-  const playClick = () => {
-    const audio = new Audio("/click.mp3");
-    audio.play();
-  };
-
   const ref = React.useRef<HTMLButtonElement>(null);
   const handleClick = async () => {
-    playClick();
     if (
       !ref.current ||
       !document.startViewTransition ||
