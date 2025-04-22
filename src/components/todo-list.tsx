@@ -29,7 +29,7 @@ export default function TodoList() {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
       >
-        <Card>
+        <Card className="bg-card/50 backdrop-blur-lg">
           <CardContent className="pt-6 text-center">
             <CardDescription>
               No todos yet. Create one to get started!
