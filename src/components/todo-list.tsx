@@ -29,7 +29,7 @@ export default function TodoList() {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
       >
-        <Card className="bg-card/50 backdrop-blur-lg">
+        <Card>
           <CardContent className="pt-6 text-center">
             <CardDescription>
               No todos yet. Create one to get started!
@@ -50,7 +50,7 @@ export default function TodoList() {
       <div className="flex justify-end mb-4">
         <Button
           onClick={handleUncheckAll}
-          variant="secondary"
+          variant="outline"
           size="sm"
           className="gap-2"
           disabled={!hasCompletedTodos}
@@ -67,8 +67,11 @@ export default function TodoList() {
             id={todo.id}
             text={todo.text}
             completed={todo.completed}
-            startTime={todo.startTime}
-            endTime={todo.endTime}
+            timeMode={todo.timeMode || "specific"}
+            startTime={todo.startTime || ""}
+            endTime={todo.endTime || ""}
+            durationHours={todo.durationHours || "00"}
+            durationMinutes={todo.durationMinutes || "00"}
             priority={todo.priority || "medium"}
           />
         ))}

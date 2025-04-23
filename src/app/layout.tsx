@@ -46,11 +46,11 @@ export default function RootLayout({
                 {children}
               </main>
               <AuroraBackground
-                className="absolute inset-0 z-50"
+                className="absolute inset-0 -z-50"
                 style={{ zIndex: -1 }}
               />
-              <Toaster richColors />
             </div>
+            <Toaster richColors />
           </ThemeProvider>
         </ReduxProvider>
       </body>

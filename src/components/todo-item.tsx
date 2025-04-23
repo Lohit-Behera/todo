@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { toggleTodo, updateTodo, deleteTodo } from "@/lib/redux/todosSlice";
-import type { Priority } from "@/lib/redux/todosSlice";
-import { Edit, Trash, Check, X, Clock } from "lucide-react";
+import type { Priority, TimeMode } from "@/lib/redux/todosSlice";
+import { Edit, Trash, Check, X, Clock, Timer } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -20,13 +20,17 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface TodoItemProps {
   id: string;
   text: string;
   completed: boolean;
+  timeMode: TimeMode;
   startTime: string;
   endTime: string;
+  durationHours: string;
+  durationMinutes: string;
   priority: Priority;
 }
 
@@ -34,13 +38,19 @@ export default function TodoItem({
   id,
   text,
   completed,
+  timeMode,
   startTime,
   endTime,
+  durationHours,
+  durationMinutes,
   priority,
 }: TodoItemProps) {
   const dispatch = useDispatch();
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(text);
+  const [editTimeMode, setEditTimeMode] = useState<TimeMode>(
+    timeMode || "specific"
+  );
 
   // Parse start time
   const startHour = startTime ? startTime.split(":")[0] : "00";
@@ -53,6 +63,14 @@ export default function TodoItem({
   const endMinute = endTime ? endTime.split(":")[1] : "00";
   const [editEndHour, setEditEndHour] = useState(endHour);
   const [editEndMinute, setEditEndMinute] = useState(endMinute);
+
+  // Duration
+  const [editDurationHours, setEditDurationHours] = useState(
+    durationHours || "00"
+  );
+  const [editDurationMinutes, setEditDurationMinutes] = useState(
+    durationMinutes || "00"
+  );
 
   const [editPriority, setEditPriority] = useState<Priority>(priority);
 
@@ -71,24 +89,27 @@ export default function TodoItem({
   const handleEdit = () => {
     setIsEditing(true);
     setEditText(text);
+    setEditTimeMode(timeMode || "specific");
     setEditStartHour(startHour);
     setEditStartMinute(startMinute);
     setEditEndHour(endHour);
     setEditEndMinute(endMinute);
+    setEditDurationHours(durationHours || "00");
+    setEditDurationMinutes(durationMinutes || "00");
     setEditPriority(priority);
   };
 
   const handleSave = () => {
     if (editText.trim()) {
-      const updatedStartTime = `${editStartHour}:${editStartMinute}`;
-      const updatedEndTime = `${editEndHour}:${editEndMinute}`;
-
       dispatch(
         updateTodo({
           id,
           text: editText,
-          startTime: updatedStartTime,
-          endTime: updatedEndTime,
+          timeMode: editTimeMode,
+          startTime: `${editStartHour}:${editStartMinute}`,
+          endTime: `${editEndHour}:${editEndMinute}`,
+          durationHours: editDurationHours,
+          durationMinutes: editDurationMinutes,
           priority: editPriority,
         })
       );
@@ -100,10 +121,13 @@ export default function TodoItem({
   const handleCancel = () => {
     setIsEditing(false);
     setEditText(text);
+    setEditTimeMode(timeMode || "specific");
     setEditStartHour(startHour);
     setEditStartMinute(startMinute);
     setEditEndHour(endHour);
     setEditEndMinute(endMinute);
+    setEditDurationHours(durationHours || "00");
+    setEditDurationMinutes(durationMinutes || "00");
     setEditPriority(priority);
   };
 
@@ -141,126 +165,214 @@ export default function TodoItem({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-4">
-                  <Label>Start Time</Label>
-                  <div className="grid grid-cols-2 gap-2 w-full">
-                    <div className="w-full space-y-2">
-                      <Label htmlFor={`edit-start-hour-${id}`}>Hour</Label>
-                      <Select
-                        value={editStartHour}
-                        onValueChange={(value) => setEditStartHour(value)}
-                      >
-                        <SelectTrigger
-                          id={`edit-start-hour-${id}`}
-                          aria-label="Hour"
-                          className="w-full"
-                        >
-                          <SelectValue placeholder="Hour" />
-                        </SelectTrigger>
-                        <SelectContent className="w-full">
-                          {Array.from({ length: 24 }, (_, i) => i).map(
-                            (hour) => (
-                              <SelectItem
-                                key={`start-hour-${hour}`}
-                                value={hour < 10 ? `0${hour}` : `${hour}`}
-                              >
-                                {hour < 10 ? `0${hour}` : hour}
-                              </SelectItem>
-                            )
-                          )}
-                        </SelectContent>
-                      </Select>
+              <Tabs
+                defaultValue={editTimeMode}
+                onValueChange={(value) => setEditTimeMode(value as TimeMode)}
+              >
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="specific">Specific Times</TabsTrigger>
+                  <TabsTrigger value="duration">Duration</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="specific" className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Start Time</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-2">
+                          <Label htmlFor={`edit-start-hour-${id}`}>Hour</Label>
+                          <Select
+                            value={editStartHour}
+                            onValueChange={setEditStartHour}
+                          >
+                            <SelectTrigger
+                              id={`edit-start-hour-${id}`}
+                              aria-label="Hour"
+                              className="w-full"
+                            >
+                              <SelectValue placeholder="Hour" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Array.from({ length: 24 }, (_, i) => i).map(
+                                (hour) => (
+                                  <SelectItem
+                                    key={`start-hour-${hour}`}
+                                    value={hour < 10 ? `0${hour}` : `${hour}`}
+                                  >
+                                    {hour < 10 ? `0${hour}` : hour}
+                                  </SelectItem>
+                                )
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor={`edit-start-minute-${id}`}>
+                            Minute
+                          </Label>
+                          <Select
+                            value={editStartMinute}
+                            onValueChange={setEditStartMinute}
+                          >
+                            <SelectTrigger
+                              id={`edit-start-minute-${id}`}
+                              aria-label="Minute"
+                              className="w-full"
+                            >
+                              <SelectValue placeholder="Minute" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Array.from({ length: 60 }, (_, i) => i).map(
+                                (minute) => (
+                                  <SelectItem
+                                    key={`start-minute-${minute}`}
+                                    value={
+                                      minute < 10 ? `0${minute}` : `${minute}`
+                                    }
+                                  >
+                                    {minute < 10 ? `0${minute}` : minute}
+                                  </SelectItem>
+                                )
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor={`edit-start-minute-${id}`}>Minute</Label>
-                      <Select
-                        value={editStartMinute}
-                        onValueChange={(value) => setEditStartMinute(value)}
-                      >
-                        <SelectTrigger
-                          id={`edit-start-minute-${id}`}
-                          aria-label="Minute"
-                          className="w-full"
-                        >
-                          <SelectValue placeholder="Minute" />
-                        </SelectTrigger>
-                        <SelectContent className="w-full">
-                          {Array.from({ length: 60 }, (_, i) => i).map(
-                            (minute) => (
-                              <SelectItem
-                                key={`start-minute-${minute}`}
-                                value={minute < 10 ? `0${minute}` : `${minute}`}
-                              >
-                                {minute < 10 ? `0${minute}` : minute}
-                              </SelectItem>
-                            )
-                          )}
-                        </SelectContent>
-                      </Select>
+                    <div>
+                      <Label>End Time</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-2">
+                          <Label htmlFor={`edit-end-hour-${id}`}>Hour</Label>
+                          <Select
+                            value={editEndHour}
+                            onValueChange={setEditEndHour}
+                          >
+                            <SelectTrigger
+                              id={`edit-end-hour-${id}`}
+                              aria-label="Hour"
+                              className="w-full"
+                            >
+                              <SelectValue placeholder="Hour" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Array.from({ length: 24 }, (_, i) => i).map(
+                                (hour) => (
+                                  <SelectItem
+                                    key={`end-hour-${hour}`}
+                                    value={hour < 10 ? `0${hour}` : `${hour}`}
+                                  >
+                                    {hour < 10 ? `0${hour}` : hour}
+                                  </SelectItem>
+                                )
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor={`edit-end-minute-${id}`}>
+                            Minute
+                          </Label>
+                          <Select
+                            value={editEndMinute}
+                            onValueChange={setEditEndMinute}
+                          >
+                            <SelectTrigger
+                              id={`edit-end-minute-${id}`}
+                              aria-label="Minute"
+                              className="w-full"
+                            >
+                              <SelectValue placeholder="Minute" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Array.from({ length: 60 }, (_, i) => i).map(
+                                (minute) => (
+                                  <SelectItem
+                                    key={`end-minute-${minute}`}
+                                    value={
+                                      minute < 10 ? `0${minute}` : `${minute}`
+                                    }
+                                  >
+                                    {minute < 10 ? `0${minute}` : minute}
+                                  </SelectItem>
+                                )
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="grid gap-4">
-                  <Label>End Time</Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-2">
-                      <Label htmlFor={`edit-end-hour-${id}`}>Hour</Label>
-                      <Select
-                        value={editEndHour}
-                        onValueChange={(value) => setEditEndHour(value)}
-                      >
-                        <SelectTrigger
-                          id={`edit-end-hour-${id}`}
-                          aria-label="Hour"
-                          className="w-full"
+                </TabsContent>
+
+                <TabsContent value="duration" className="space-y-4">
+                  <div>
+                    <Label>Time to Complete</Label>
+                    <div className="grid grid-cols-2 gap-4 mt-2">
+                      <div className="space-y-2">
+                        <Label htmlFor={`edit-duration-hours-${id}`}>
+                          Hours
+                        </Label>
+                        <Select
+                          value={editDurationHours}
+                          onValueChange={setEditDurationHours}
                         >
-                          <SelectValue placeholder="Hour" />
-                        </SelectTrigger>
-                        <SelectContent className="w-full">
-                          {Array.from({ length: 24 }, (_, i) => i).map(
-                            (hour) => (
-                              <SelectItem
-                                key={`end-hour-${hour}`}
-                                value={hour < 10 ? `0${hour}` : `${hour}`}
-                              >
-                                {hour < 10 ? `0${hour}` : hour}
-                              </SelectItem>
-                            )
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor={`edit-end-minute-${id}`}>Minute</Label>
-                      <Select
-                        value={editEndMinute}
-                        onValueChange={(value) => setEditEndMinute(value)}
-                      >
-                        <SelectTrigger
-                          id={`edit-end-minute-${id}`}
-                          aria-label="Minute"
-                          className="w-full"
+                          <SelectTrigger
+                            id={`edit-duration-hours-${id}`}
+                            aria-label="Hours"
+                            className="w-full"
+                          >
+                            <SelectValue placeholder="Hours" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 24 }, (_, i) => i).map(
+                              (hour) => (
+                                <SelectItem
+                                  key={`duration-hour-${hour}`}
+                                  value={hour < 10 ? `0${hour}` : `${hour}`}
+                                >
+                                  {hour < 10 ? `0${hour}` : hour}
+                                </SelectItem>
+                              )
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`edit-duration-minutes-${id}`}>
+                          Minutes
+                        </Label>
+                        <Select
+                          value={editDurationMinutes}
+                          onValueChange={setEditDurationMinutes}
                         >
-                          <SelectValue placeholder="Minute" />
-                        </SelectTrigger>
-                        <SelectContent className="w-full">
-                          {Array.from({ length: 60 }, (_, i) => i).map(
-                            (minute) => (
-                              <SelectItem
-                                key={`end-minute-${minute}`}
-                                value={minute < 10 ? `0${minute}` : `${minute}`}
-                              >
-                                {minute < 10 ? `0${minute}` : minute}
-                              </SelectItem>
-                            )
-                          )}
-                        </SelectContent>
-                      </Select>
+                          <SelectTrigger
+                            id={`edit-duration-minutes-${id}`}
+                            aria-label="Minutes"
+                            className="w-full"
+                          >
+                            <SelectValue placeholder="Minutes" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 60 }, (_, i) => i).map(
+                              (minute) => (
+                                <SelectItem
+                                  key={`duration-minute-${minute}`}
+                                  value={
+                                    minute < 10 ? `0${minute}` : `${minute}`
+                                  }
+                                >
+                                  {minute < 10 ? `0${minute}` : minute}
+                                </SelectItem>
+                              )
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
+                </TabsContent>
+              </Tabs>
 
               <div className="grid w-full items-center gap-1.5">
                 <Label htmlFor={`edit-priority-${id}`}>Priority</Label>
@@ -270,11 +382,11 @@ export default function TodoItem({
                 >
                   <SelectTrigger
                     id={`edit-priority-${id}`}
-                    className="min-w-[180px]"
+                    className="w-[180px]"
                   >
                     <SelectValue placeholder="Select priority" />
                   </SelectTrigger>
-                  <SelectContent className="min-w-[180px]">
+                  <SelectContent>
                     <SelectItem value="low">Low</SelectItem>
                     <SelectItem value="medium">Medium</SelectItem>
                     <SelectItem value="high">High</SelectItem>
@@ -316,7 +428,7 @@ export default function TodoItem({
                     </Badge>
                   </div>
 
-                  {(startTime || endTime) && (
+                  {timeMode === "specific" && (startTime || endTime) ? (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Clock size={14} />
                       <span>
@@ -325,7 +437,21 @@ export default function TodoItem({
                         {endTime && `${endTime}`}
                       </span>
                     </div>
-                  )}
+                  ) : timeMode === "duration" &&
+                    (durationHours !== "00" || durationMinutes !== "00") ? (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Timer size={14} />
+                      <span>
+                        {durationHours !== "00" &&
+                          `${Number.parseInt(durationHours)}h`}
+                        {durationHours !== "00" &&
+                          durationMinutes !== "00" &&
+                          " "}
+                        {durationMinutes !== "00" &&
+                          `${Number.parseInt(durationMinutes)}m`}
+                      </span>
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </div>
